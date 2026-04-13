@@ -1,0 +1,9 @@
+.build/
+*.o
+*.d
+*.swp
+*.xcuserstate
+xcuserdata/
+.DS_Store
+DerivedData/
+*.resolved
