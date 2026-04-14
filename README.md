@@ -1,6 +1,6 @@
 # DiskMapper
 
-A fast macOS disk usage visualizer — a modern clone of [Disk Inventory X](http://www.derlien.com). Scans your drive using `getattrlistbulk(2)` and renders an interactive squarified treemap with SwiftUI.
+A fast macOS disk usage visualizer — a modern fast, stable, Swift-native interpretation, inspired by the amazing but old and unstable [Disk Inventory X](http://www.derlien.com). Scans your drive using `getattrlistbulk(2)` and renders an interactive squarified treemap with SwiftUI.
 
 ![DiskMapper screenshot](https://github.com/alokm/diskmapper/raw/main/screenshot.png)
 
