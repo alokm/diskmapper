@@ -1,22 +1,16 @@
 import SwiftUI
 import DiskMapper
 
-private enum SidebarSort {
-    case size, name, date
-}
-
-
 /// Outline-style list panel showing the current directory's contents.
 ///
 /// - Hover over a row → sets `viewModel.hoveredID`, highlighting the rect in the treemap.
 /// - Click a file row → sets `viewModel.selectedID` (shown in the status bar).
 /// - Click a directory row → drills down (same as tapping in the treemap).
-/// - Sort toggle: size (default, largest first) or name (A→Z).
+/// - Always sorted by size, largest first.
 /// - Search field: filters rows and highlights matching cells in the treemap.
 struct NavigatorSidebar: View {
 
     @ObservedObject var viewModel: TreemapViewModel
-    @State private var sortOrder: SidebarSort = .size
     @State private var listSelection: String?
     @State private var trashTarget: FileNode?
     @State private var showingTrashDialog = false
@@ -34,24 +28,8 @@ struct NavigatorSidebar: View {
     private func recomputeFilteredChildren() {
         guard let root = displayRoot else { filteredChildren = []; return }
 
-        var children: [FileNode]
-        switch sortOrder {
-        case .size:
-            children = root.children  // already sorted largest-first by DiskScanner
-        case .name:
-            children = root.children.sorted {
-                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-            }
-        case .date:
-            children = root.children.sorted {
-                switch ($0.modifiedDate, $1.modifiedDate) {
-                case let (a?, b?): return a > b
-                case (_?, nil):    return true
-                case (nil, _?):    return false
-                case (nil, nil):   return false
-                }
-            }
-        }
+        // Always sorted largest-first (DiskScanner pre-sorts the tree this way).
+        var children = root.children
 
         if !viewModel.showHiddenFiles {
             children = children.filter { !$0.name.hasPrefix(".") }
@@ -75,7 +53,6 @@ struct NavigatorSidebar: View {
         .frame(minWidth: 220)
         .onAppear { recomputeFilteredChildren() }
         .onChange(of: viewModel.displayRoot?.id) { _ in recomputeFilteredChildren() }
-        .onChange(of: sortOrder)                 { _ in recomputeFilteredChildren() }
         .onChange(of: viewModel.showHiddenFiles) { _ in recomputeFilteredChildren() }
         .onChange(of: viewModel.searchText)      { _ in recomputeFilteredChildren() }
         .confirmationDialog(
@@ -135,14 +112,6 @@ struct NavigatorSidebar: View {
                         .foregroundStyle(.tertiary)
                 }
 
-                Picker("Sort", selection: $sortOrder) {
-                    Image(systemName: "arrow.down.circle.fill").tag(SidebarSort.size)
-                    Image(systemName: "textformat.abc").tag(SidebarSort.name)
-                    Image(systemName: "calendar").tag(SidebarSort.date)
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 80)
-                .help("Sort by size / name / date modified")
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)

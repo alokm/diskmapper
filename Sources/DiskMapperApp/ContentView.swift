@@ -138,24 +138,6 @@ struct ContentView: View {
 
             Spacer()
 
-            // Color theme picker
-            if appState.rootNode != nil {
-                Picker("Theme", selection: $treemapViewModel.colorTheme) {
-                    ForEach(ColorTheme.allCases) { theme in
-                        Text(theme.rawValue).tag(theme)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 160)
-                .help("Colour cells by file kind, size, or monochrome")
-                .onChange(of: treemapViewModel.colorTheme) { _ in
-                    // Force canvas redraw (color change doesn't touch layoutRects)
-                    treemapViewModel.objectWillChange.send()
-                }
-
-                Divider().frame(height: 16)
-            }
-
             if !appState.isScanning { legend }
         }
         .padding(.horizontal, 12)
@@ -174,34 +156,12 @@ struct ContentView: View {
 
     private var legend: some View {
         HStack(spacing: 8) {
-            // Only show "By Kind" legend when that theme is active
-            if treemapViewModel.colorTheme == .byKind {
-                ForEach(FileKindColor.legend, id: \.kind) { entry in
-                    HStack(spacing: 3) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(FileKindColor.color(for: entry.kind))
-                            .frame(width: 10, height: 10)
-                        Text(entry.label)
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            } else {
-                // Gradient legend for size/mono themes
-                let desc = treemapViewModel.colorTheme == .bySize
-                    ? "small → large"
-                    : "small → large"
-                HStack(spacing: 4) {
-                    LinearGradient(
-                        colors: treemapViewModel.colorTheme == .bySize
-                            ? [Color(hue: 0.65, saturation: 0.72, brightness: 0.82),
-                               Color(hue: 0.00, saturation: 0.72, brightness: 0.82)]
-                            : [Color(white: 0.22), Color(white: 0.77)],
-                        startPoint: .leading, endPoint: .trailing
-                    )
-                    .frame(width: 60, height: 8)
-                    .clipShape(RoundedRectangle(cornerRadius: 2))
-                    Text(desc)
+            ForEach(FileKindColor.legend, id: \.kind) { entry in
+                HStack(spacing: 3) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(FileKindColor.color(for: entry.kind))
+                        .frame(width: 10, height: 10)
+                    Text(entry.label)
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
