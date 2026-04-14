@@ -113,7 +113,7 @@ struct TreemapView: View {
         // ── Background ──────────────────────────────────────────────────────
         context.fill(
             Path(CGRect(origin: .zero, size: size)),
-            with: .color(Color(white: 0.10))
+            with: .color(Color(white: 0.08))
         )
 
         guard !rects.isEmpty else {
@@ -124,22 +124,38 @@ struct TreemapView: View {
             return
         }
 
-        // ── File fills ──────────────────────────────────────────────────────
+        // ── File fills + gradient overlay ───────────────────────────────────
         for lr in rects where !lr.node.isDirectory {
             let sizeRatio = rootSize > 0
                 ? log10(Double(lr.node.totalSize) + 1) / log10(Double(rootSize) + 1)
                 : 0
+            let base = FileKindColor.color(for: lr.node.kind, theme: theme, sizeRatio: sizeRatio)
+
+            // Solid base fill.
+            context.fill(Path(lr.rect), with: .color(base))
+
+            // Subtle top-to-bottom gradient: lighter at top, darker at bottom.
+            // Gives each cell a tactile, slightly 3-D feel and makes adjacent
+            // same-colour cells visually distinct without extra border weight.
+            let gradient = Gradient(colors: [
+                Color.white.opacity(0.18),
+                Color.black.opacity(0.22),
+            ])
             context.fill(
                 Path(lr.rect),
-                with: .color(FileKindColor.color(for: lr.node.kind, theme: theme, sizeRatio: sizeRatio))
+                with: .linearGradient(
+                    gradient,
+                    startPoint: CGPoint(x: lr.rect.midX, y: lr.rect.minY),
+                    endPoint:   CGPoint(x: lr.rect.midX, y: lr.rect.maxY)
+                )
             )
         }
 
         // ── Cell borders ────────────────────────────────────────────────────
         for lr in rects {
             let (color, width): (Color, CGFloat) = lr.node.isDirectory
-                ? (.white.opacity(0.18), 1.0)
-                : (.black.opacity(0.30), 0.5)
+                ? (.white.opacity(0.22), 1.0)
+                : (.black.opacity(0.40), 0.5)
             context.stroke(Path(lr.rect), with: .color(color), lineWidth: width)
         }
 
